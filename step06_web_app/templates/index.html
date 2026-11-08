@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bearing Quality Inspection System | Pure CNN Engine</title>
+
+  <!-- Google Font: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      --bg-color: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border-color: #E2E8F0;
+
+      --color-pass: #10B981;
+      --color-pass-bg: #ECFDF5;
+      --color-pass-border: #A7F3D0;
+
+      --color-reject: #EF4444;
+      --color-reject-bg: #FEF2F2;
+      --color-reject-border: #FECACA;
+
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 16px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: #EEF2FF;
+      color: #4338CA;
+      font-size: 0.74rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .badge-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #4338CA;
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: 22px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Tabs */
+    .tab-header {
+      display: flex;
+      gap: 6px;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-family);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: #FFFFFF;
+      color: var(--text-main);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #CBD5E1;
+      border-radius: 10px;
+      padding: 36px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #FAFBFD;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: #EFF6FF;
+    }
+
+    .upload-icon {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 10px auto;
+      stroke: var(--primary);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .dropzone-text {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .dropzone-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Camera Panel */
+    .camera-panel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .camera-container {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #0F172A;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    #videoElement {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 55%;
+      height: 55%;
+      border: 2px dashed rgba(255, 255, 255, 0.7);
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    .btn-action {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 9px 18px;
+      font-family: var(--font-family);
+      font-size: 0.84rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Multi-Mode Metrology Layer Bar */
+    .view-layer-bar {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .btn-layer {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      font-family: var(--font-family);
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .btn-layer:hover {
+      background: #F1F5F9;
+      color: var(--text-main);
+    }
+
+    .btn-layer.active {
+      background: #0F172A;
+      color: #FFFFFF;
+      border-color: #0F172A;
+      font-weight: 600;
+    }
+
+    /* Dual Image Inspection View - FIXED STATIC GEOMETRY */
+    .dual-image-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+      height: 310px;
+      max-height: 310px;
+    }
+
+    @media (max-width: 600px) {
+      .dual-image-row {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-height: none;
+      }
+    }
+
+    .image-box-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      height: 310px;
+      max-height: 310px;
+      min-width: 0;
+    }
+
+    .image-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .image-tag {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .tag-original {
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    .tag-annotated {
+      background: #EEF2FF;
+      color: #4338CA;
+    }
+
+    .image-box {
+      width: 100%;
+      height: 280px;
+      min-height: 280px;
+      max-height: 280px;
+      background: #0F172A;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .image-placeholder {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 12px;
+    }
+
+    /* Status Banner */
+    .status-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .status-banner.pass {
+      display: block;
+      background: var(--color-pass-bg);
+      border: 1px solid var(--color-pass-border);
+      color: var(--color-pass);
+    }
+
+    .status-banner.reject {
+      display: block;
+      background: var(--color-reject-bg);
+      border: 1px solid var(--color-reject-border);
+      color: var(--color-reject);
+    }
+
+    .status-decision {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 2px;
+    }
+
+    .status-conf {
+      font-size: 0.8rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    /* Telemetry Table */
+    .telemetry-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+
+    .telemetry-label {
+      color: var(--text-muted);
+    }
+
+    .telemetry-value {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Progress bar */
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 999px;
+    }
+
+    .fill-pass {
+      background: var(--color-pass);
+    }
+
+    .fill-reject {
+      background: var(--color-reject);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding-top: 24px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-tag">Pure CNN Native Engine &bull; Multi-Layer Metrology</div>
+      <h1>Bearing Quality Inspection System</h1>
+      <p class="subtitle">Standard 7-Stage Convolutional Neural Network with High-Definition Disparity Diagnostics</p>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="dashboard-grid">
+
+      <!-- Input Panel -->
+      <div class="card">
+        <div class="card-title">
+          <span>Inspection Input</span>
+          <span style="font-size: 0.78rem; font-weight: 400; color: var(--text-muted);">Format: Grayscale 128x128</span>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="tab-header">
+          <button class="tab-btn active" id="tabUpload" onclick="switchMode('upload')">File Upload</button>
+          <button class="tab-btn" id="tabCamera" onclick="switchMode('camera')">Live Camera</button>
+        </div>
+
+        <!-- File Upload Area -->
+        <div id="uploadPanel">
+          <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <svg class="upload-icon" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="dropzone-text">Drop bearing photo here or click to browse</div>
+            <div class="dropzone-sub">Supports JPG, PNG, BMP (Native 128x128 Grayscale)</div>
+          </div>
+        </div>
+
+        <!-- Live Camera Area -->
+        <div id="cameraPanel" class="camera-panel">
+          <div class="camera-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <div class="camera-reticle"></div>
+          </div>
+          <button class="btn-action" onclick="captureWebcamFrame()">Capture &amp; Inspect</button>
+        </div>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="card">
+        <div class="card-title">
+          <span>Quality Control Metrology View</span>
+          <span id="latencyBadge" style="font-size: 0.78rem; font-weight: 500; color: var(--text-muted);">- ms</span>
+        </div>
+
+        <!-- Metrology Layer Toolbar -->
+        <div
+          style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #F8FAFC; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 0.76rem; font-weight: 600; color: #475569;">Analysis Layer:</span>
+          <div class="view-layer-bar">
+            <button type="button" class="btn-layer active" id="layer_crack_trace"
+              onclick="switchMetrologyLayer('crack_trace')">Crack Trace</button>
+            <button type="button" class="btn-layer" id="layer_grad_cam" onclick="switchMetrologyLayer('grad_cam')">CNN
+              Grad-CAM</button>
+            <button type="button" class="btn-layer" id="layer_texture_gradient"
+              onclick="switchMetrologyLayer('texture_gradient')">Texture Gradient</button>
+            <button type="button" class="btn-layer" id="layer_radial_symmetry"
+              onclick="switchMetrologyLayer('radial_symmetry')">Spatial Disparity</button>
+            <button type="button" class="btn-layer" id="layer_composite"
+              onclick="switchMetrologyLayer('composite')">Composite QC</button>
+          </div>
+        </div>
+
+        <!-- Dual Side-by-Side Images (FIXED ROCK-SOLID DIMENSIONS) -->
+        <div class="dual-image-row">
+          <!-- 1. Original Image -->
+          <div class="image-box-wrapper">
+            <div class="image-box-header">
+              <span>Original Source</span>
+              <span class="image-tag tag-original">Input Feed</span>
+            </div>
+            <div class="image-box">
+              <img id="previewOriginal" style="display: none;" alt="Original Bearing">
+              <div id="placeholderOriginal" class="image-placeholder">Awaiting inspection image</div>
+            </div>
+          </div>
+
+          <!-- 2. QC Multi-Layer Metrology Image -->
+          <div class="image-box-wrapper">
+            <div class="image-box-header">
+              <span>Metrology Disparity Map</span>
+              <span id="annotatedTag" class="image-tag tag-annotated">Multi-Layer QC</span>
+            </div>
+            <div class="image-box">
+              <img id="previewAnnotated" style="display: none;" alt="128x128 Surface Disparity Matrix">
+              <div id="placeholderAnnotated" class="image-placeholder">High-definition metrology map will appear here
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decision Banner -->
+        <div id="statusBanner" class="status-banner">
+          <div id="statusDecision" class="status-decision">WAITING</div>
+          <div id="statusConf" class="status-conf">Confidence: 0.00%</div>
+        </div>
+
+        <!-- Metric Details -->
+        <div class="telemetry-group">
+          <div>
+            <div class="telemetry-row" style="border-bottom: none; padding-bottom: 2px;">
+              <span class="telemetry-label">Defect Probability</span>
+              <span class="telemetry-value" id="valDefect">0.0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="barDefect" class="progress-bar-fill fill-reject"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="telemetry-row" style="border-bottom: none; padding-bottom: 2px;">
+              <span class="telemetry-label">Normal Probability</span>
+              <span class="telemetry-value" id="valNormal">0.0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="barNormal" class="progress-bar-fill fill-pass"></div>
+            </div>
+          </div>
+
+          <div class="telemetry-row" style="margin-top: 6px;">
+            <span class="telemetry-label">Confirmed Anomaly Cells</span>
+            <span class="telemetry-value" id="markerStatus">Awaiting scan</span>
+          </div>
+
+          <div class="telemetry-row">
+            <span class="telemetry-label">Inference Execution Latency</span>
+            <span class="telemetry-value" id="telemetryLatency">-</span>
+          </div>
+
+          <div class="telemetry-row">
+            <span class="telemetry-label">Rendering Resolution</span>
+            <span class="telemetry-value">Full-Frame 128x128 (220 DPI HD)</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      Industrial Defect Inspection System &bull; Pure CNN From Scratch &bull; Deterministic PyTorch Engine
+    </footer>
+  </div>
+
+  <script>
+    let videoStream = null;
+    let currentSensitivity = 0.22;
+    let lastFile = null;
+    let lastDataUrl = null;
+    let currentViews = {};
+    let activeLayer = 'crack_trace';
+
+    function switchMetrologyLayer(layerKey) {
+      activeLayer = layerKey;
+      document.querySelectorAll('.btn-layer').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`layer_${layerKey}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Only swap the image source - ZERO DIMENSION OR LAYOUT SHIFTS
+      const annoImg = document.getElementById('previewAnnotated');
+      if (currentViews && currentViews[layerKey]) {
+        annoImg.src = currentViews[layerKey];
+      }
+    }
+
+    // Switch between Upload and Camera tabs
+    function switchMode(mode) {
+      const tabUpload = document.getElementById('tabUpload');
+      const tabCamera = document.getElementById('tabCamera');
+      const uploadPanel = document.getElementById('uploadPanel');
+      const cameraPanel = document.getElementById('cameraPanel');
+
+      if (mode === 'upload') {
+        tabUpload.classList.add('active');
+        tabCamera.classList.remove('active');
+        uploadPanel.style.display = 'block';
+        cameraPanel.style.display = 'none';
+        stopWebcam();
+      } else {
+        tabCamera.classList.add('active');
+        tabUpload.classList.remove('active');
+        uploadPanel.style.display = 'none';
+        cameraPanel.style.display = 'flex';
+        startWebcam();
+      }
+    }
+
+    // Drag and Drop listeners
+    const dropzone = document.getElementById('dropzone');
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('dragover'); });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        processFile(e.target.files[0]);
+      }
+    }
+
+    function processFile(file) {
+      lastFile = file;
+      lastDataUrl = null;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('sensitivity', currentSensitivity);
+      submitPrediction(formData, false);
+    }
+
+    function startWebcam() {
+      const video = document.getElementById('videoElement');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+          .then(stream => {
+            videoStream = stream;
+            video.srcObject = stream;
+          })
+          .catch(err => {
+            alert("Camera access denied or unavailable: " + err.message);
+            switchMode('upload');
+          });
+      }
+    }
+
+    function stopWebcam() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+    }
+
+    function captureWebcamFrame() {
+      const video = document.getElementById('videoElement');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      lastFile = null;
+      lastDataUrl = dataUrl;
+      submitPrediction({ image_base64: dataUrl, sensitivity: currentSensitivity }, true);
+    }
+
+    function submitPrediction(payload, isJson) {
+      const options = { method: 'POST' };
+
+      if (isJson) {
+        options.headers = { 'Content-Type': 'application/json' };
+        options.body = JSON.stringify(payload);
+      } else {
+        options.body = payload;
+      }
+
+      fetch('/api/predict', options)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            renderDualResults(data);
+          } else {
+            alert("Inspection error: " + (data.error || "Unknown"));
+          }
+        })
+        .catch(err => alert("Inference request failed: " + err));
+    }
+
+    function renderDualResults(data) {
+      // 1. Dual Image Update
+      const origImg = document.getElementById('previewOriginal');
+      const origPlaceholder = document.getElementById('placeholderOriginal');
+      origImg.src = data.original_image;
+      origImg.style.display = 'block';
+      origPlaceholder.style.display = 'none';
+
+      currentViews = data.views || {};
+      const annoImg = document.getElementById('previewAnnotated');
+      const annoPlaceholder = document.getElementById('placeholderAnnotated');
+      if (currentViews[activeLayer]) {
+        annoImg.src = currentViews[activeLayer];
+      } else {
+        annoImg.src = data.annotated_image;
+      }
+      annoImg.style.display = 'block';
+      annoPlaceholder.style.display = 'none';
+
+      // 2. Banner & Confidence
+      const banner = document.getElementById('statusBanner');
+      const decision = document.getElementById('statusDecision');
+      const conf = document.getElementById('statusConf');
+      const latencyBadge = document.getElementById('latencyBadge');
+      const telemetryLatency = document.getElementById('telemetryLatency');
+      const markerStatus = document.getElementById('markerStatus');
+
+      const isDefect = data.is_defect;
+      banner.className = 'status-banner ' + (isDefect ? 'reject' : 'pass');
+      decision.innerText = data.decision;
+      conf.innerText = `Confidence: ${data.confidence}%`;
+
+      latencyBadge.innerText = `${data.latency_ms} ms`;
+      telemetryLatency.innerText = `${data.latency_ms} ms`;
+
+      if (isDefect) {
+        markerStatus.innerHTML = `<span style="color: #EF4444;">${data.num_defect_markers} Anomaly Cells (Defect Alert)</span>`;
+        document.getElementById('annotatedTag').className = 'image-tag tag-annotated';
+        document.getElementById('annotatedTag').innerText = 'Anomaly Matrix';
+      } else {
+        markerStatus.innerHTML = `<span style="color: #10B981;">${data.num_defect_markers} Anomaly Cells (Within Tolerance)</span>`;
+        document.getElementById('annotatedTag').className = 'image-tag tag-original';
+        document.getElementById('annotatedTag').innerText = 'Standard Matrix';
+      }
+
+      // 3. Probabilities
+      const defectProb = data.probabilities.defect_ring || 0;
+      const normalProb = data.probabilities.normal_ring || 0;
+
+      document.getElementById('valDefect').innerText = `${defectProb}%`;
+      document.getElementById('barDefect').style.width = `${defectProb}%`;
+
+      document.getElementById('valNormal').innerText = `${normalProb}%`;
+      document.getElementById('barNormal').style.width = `${normalProb}%`;
+    }
+  </script>
+</body>
+
+</html>

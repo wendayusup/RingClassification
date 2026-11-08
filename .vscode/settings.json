@@ -1,0 +1,11 @@
+{
+  "python.analysis.extraPaths": [
+    ".",
+    "./step01_data_preparation",
+    "./step02_model_architecture",
+    "./step03_training",
+    "./step04_evaluation",
+    "./step05_inference",
+    "./step06_web_app"
+  ]
+}
